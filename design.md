@@ -185,6 +185,7 @@ permit(
   resource
 ) when {
   context.token_collection has "google_access_token" &&
+  context.token_collection.google_access_token has "scopes" &&
   "read:profile" in context.token_collection.google_access_token.scopes
 };
 ```
@@ -200,8 +201,10 @@ permit(
 ) when {
   // Check if any access token has write:documents scope
   (context.token_collection has "google_access_token" &&
+   context.token_collection.google_access_token has "scopes" &&
    "write:documents" in context.token_collection.google_access_token.scopes) ||
   (context.token_collection has "corp_access_token" &&
+   context.token_collection.corp_access_token has "scopes" &&
    "write:documents" in context.token_collection.corp_access_token.scopes)
 };
 ```
@@ -216,6 +219,7 @@ permit(
   resource
 ) when {
   context.token_collection has "google_access_token" &&
+  context.token_collection.google_access_token has "scopes" &&
   "read:calendar" in context.token_collection.google_access_token.scopes &&
   "write:calendar" in context.token_collection.google_access_token.scopes
 };
