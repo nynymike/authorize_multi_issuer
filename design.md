@@ -37,7 +37,7 @@ Developer sends an Array of all the tokens:
     "payload": "eyJhbGciOiJFZERTQSIsInR5cCI6IkpXVCJ9..."
   },
   {
-    "mapping": "Jans::Userinfo_token"
+    "mapping": "Jans::Userinfo_token",
     "payload": "eyJhbGciOiJFZERTQSIsInR5cCI6IkpXVCJ9..."
   }
 ]
@@ -137,7 +137,10 @@ entity Token = {
   "token_type": String,                  // e.g., "Jans::Access_Token", "Acme::DolphinToken"
   "jti": String,                         // Unique identifier for this token instance, hopefully the `jti`
   "issuer": String,                      // JWT issuer claim
-  "claims": Record<String, EntityValue>, // All JWT claims as key-value pairs
+  "claims": {String: String},            // All JWT claims as string key-value pairs
+  "scopes": Set<String>,                 // Parsed scopes from scope claim (if present)
+  "exp": Long,                           // Expiration time as Unix timestamp
+  "iat": Long,                           // Issued at time as Unix timestamp
   "validated_at": Long,                  // Timestamp when token was validated
 };
 ```
@@ -182,8 +185,7 @@ permit(
   resource
 ) when {
   context.token_collection has "google_access_token" &&
-  context.token_collection.google_access_token.claims has "scope" &&
-  "read:profile" in context.token_collection.google_access_token.claims.scope
+  "read:profile" in context.token_collection.google_access_token.scopes
 };
 ```
 
@@ -198,11 +200,9 @@ permit(
 ) when {
   // Check if any access token has write:documents scope
   (context.token_collection has "google_access_token" &&
-   context.token_collection.google_access_token.claims has "scope" &&
-   "write:documents" in context.token_collection.google_access_token.claims.scope) ||
+   "write:documents" in context.token_collection.google_access_token.scopes) ||
   (context.token_collection has "corp_access_token" &&
-   context.token_collection.corp_access_token.claims has "scope" &&
-   "write:documents" in context.token_collection.corp_access_token.claims.scope)
+   "write:documents" in context.token_collection.corp_access_token.scopes)
 };
 ```
 
@@ -216,9 +216,8 @@ permit(
   resource
 ) when {
   context.token_collection has "google_access_token" &&
-  context.token_collection.google_access_token.claims has "scope" &&
-  "read:calendar" in context.token_collection.google_access_token.claims.scope &&
-  "write:calendar" in context.token_collection.google_access_token.claims.scope
+  "read:calendar" in context.token_collection.google_access_token.scopes &&
+  "write:calendar" in context.token_collection.google_access_token.scopes
 };
 ```
 
@@ -263,8 +262,7 @@ forbid(
   resource
 ) when {
   context.token_collection has "dolphin_sea_access_token" &&
-  context.token_collection.dolphin_sea_access_token.claims has "exp" &&
-  context.token_collection.dolphin_sea_access_token.claims.exp <= context.current_time
+  context.token_collection.dolphin_sea_access_token.exp <= context.current_time
 };
 
 // Require recent authentication
