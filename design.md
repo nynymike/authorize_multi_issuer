@@ -94,6 +94,7 @@ Use existing Cedarling token validation capabilities to
 - Check contents: e.g. `exp`, `nbf` 
 - Extract raw claim (no interpretation)
 - Check token status
+- Invalid tokens should be discarded -- but not impact other tokens
 
 ### Dynamic Entity Factory
 
